@@ -1,5 +1,7 @@
 extends Area2D
 
+func get_class(): return "Coin"
+
 export var listener :NodePath
 onready var target = get_node(listener)
 

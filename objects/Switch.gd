@@ -1,5 +1,7 @@
 extends Area2D
 
+func get_class(): return "Switch"
+
 export var listener :NodePath
 onready var target = get_node(listener)
 
@@ -13,6 +15,7 @@ func _ready():
 
 
 func _on_Switch_area_entered(area):
+	print("switch touched.")
 	target.at_switch (self)
 
 
@@ -21,6 +24,7 @@ func _on_Switch_area_exited(area):
 
 
 func toggle ():
+	print("toggling")
 	if toggled:
 		$Sprite.set_texture (soff)
 		toggled = false

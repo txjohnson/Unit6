@@ -14,10 +14,13 @@ var luigi_doing :int = 0
 var isOnClosedSwitch = false
 var isOnOpenSwitch = false
 var isUnderCoin = false
+var isAtFlag = false
 var isBlocked = false
 var isBlockedLeft = false
 var isBlockedRight = false
 var rng = RandomNumberGenerator.new()
+
+var activeObjs = {}
 
 var coin = preload("res://objects/Coin.tscn")
 var switch = preload("res://objects/Switch.tscn")
@@ -29,11 +32,42 @@ func _ready():
 	waiting = false
 	proceed = Semaphore.new()
 	stepper = Thread.new()
-	stepper .start (self, "execute")
+	stepper .start (self, "main")
 
 func _exit_tree():
 	stepper.wait_to_finish()
 
+func printState ():
+	print ("isOnClosedSwitch = ", isOnClosedSwitch)
+	print ("isOnOpenSwitch = ", isOnOpenSwitch)
+	print ("isUnderCoin = ", isUnderCoin)
+	print ("isAtFlag = ", isAtFlag)
+	
+func updateState ():
+	var lpos = Vector2 (($Luigi.position.x - 16) / 32, ($Luigi.position.y + 8) / 32).floor()
+	
+	isOnClosedSwitch = false
+	isOnOpenSwitch = false
+	isUnderCoin = false
+	isAtFlag = false
+		
+	if activeObjs .has (lpos):
+		var objAtPos = activeObjs [lpos]
+		if objAtPos.get_class() == "Switch":
+			atswitch = objAtPos
+			isOnClosedSwitch = objAtPos.toggled == false
+			isOnOpenSwitch   = objAtPos.toggled == true
+						
+		elif objAtPos.get_class() == "Coin":
+			under_coin = objAtPos
+			isUnderCoin = true
+			
+		elif objAtPos.get_class() == "Flag":
+			isAtFlag = true
+
+#	printState()
+	pass
+	
 func updateBlocked ():
 	var pos = $Luigi.next_forward_position()
 	var cx = (pos.x - 16) / 32
@@ -100,6 +134,7 @@ func toggleSwitch():
 		isOnOpenSwitch = atswitch.toggled == true
 	
 func _on_Luigi_did_operation():
+	updateState()
 	updateBlocked()
 	if waiting:
 		waiting = false
@@ -124,35 +159,26 @@ func _on_Flag_area_entered(area):
 func _on_Luigi_grabbing():
 	if under_coin != null:
 		coins_grabbed += 1
+		var x = (under_coin.position.x - 16) / 32
+		var y = (under_coin.position.y + 16) / 32
+		
+		activeObjs .erase (Vector2 (x, y).floor())		
 		under_coin.queue_free ()
 		under_coin = null
 		isUnderCoin = false
-
-func collected (who):
-	under_coin = who
-	isUnderCoin = true
-
-func at_switch (who):
-	atswitch = who
-	isOnClosedSwitch = who.toggled == false
-	isOnOpenSwitch = who.toggled == true
-	
-func not_at_switch (who):
-	isOnClosedSwitch = false
-	atswitch = null
 	
 func put_luigi_at_cell (cx, cy):
-	print("cell: ", cx, ", ", cy)
 	var x = cx * 32 + 16
 	var y = cy * 32 - 8
-	print("coord: ", x, ", ", y)
 	$Luigi.position = Vector2(x, y)
+	updateState()
 	updateBlocked()
 
 func put_coin_at_cell (cx, cy):
 	var newcoin = coin.instance()
 	var x = cx * 32 + 16
 	var y = cy * 32 - 16
+	activeObjs [Vector2(cx,cy)] = newcoin
 	newcoin.position = Vector2(x, y)
 	newcoin.listener = self.get_path()
 	$Coins.add_child (newcoin)
@@ -161,6 +187,7 @@ func put_switch_at_cell (cx, cy):
 	var newsw = switch.instance()
 	var x = cx * 32 + 16
 	var y = cy * 32 + 8
+	activeObjs [Vector2 (cx,cy)] = newsw
 	newsw .position = Vector2(x,y)
 	newsw.listener = self.get_path()
 	$Switches.add_child (newsw)
@@ -169,6 +196,7 @@ func put_open_switch_at_cell (cx, cy):
 	var newsw = switch.instance()
 	var x = cx * 32 + 16
 	var y = cy * 32 + 8
+	activeObjs [Vector2 (cx,cy)] = newsw
 	newsw .position = Vector2(x,y)
 	newsw.listener = self.get_path()
 	$Switches.add_child (newsw)
@@ -178,6 +206,7 @@ func put_random_switch_at_cell (cx, cy):
 	var newsw = switch.instance()
 	var x = cx * 32 + 16
 	var y = cy * 32 + 8
+	activeObjs [Vector2 (cx,cy)] = newsw
 	newsw .position = Vector2(x,y)
 	newsw.listener = self.get_path()
 	$Switches.add_child (newsw)
@@ -188,6 +217,7 @@ func put_random_switch_at_cell (cx, cy):
 func put_flag_at_cell (cx, cy):
 	var x = cx * 32 + 16
 	var y = cy * 32 - 32
+	activeObjs [Vector2 (cx,cy)] = $Flag
 	$Flag.position = Vector2 (x, y)
 	
 

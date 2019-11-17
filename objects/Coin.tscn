@@ -28,6 +28,7 @@ script = ExtResource( 1 )
 position = Vector2( 0, -56 )
 scale = Vector2( 0.01, 0.01 )
 frames = SubResource( 1 )
+frame = 1
 playing = true
 
 [node name="Polygon2D" type="Polygon2D" parent="."]
@@ -39,4 +40,3 @@ polygon = PoolVector2Array( -16.7715, 0.0909424, -9.02428, -6.26176, 0.272369, -
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 position = Vector2( -0.579247, 30.4102 )
 shape = SubResource( 2 )
-[connection signal="area_entered" from="." to="." method="_on_Coin_area_entered"]

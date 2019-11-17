@@ -10,7 +10,7 @@ extends "res://objects/Basic.gd"
 # INSTRUCTIONS:
 # 1. Choose a condition for while that determine when Luigi will stop
 # 2. Add commands to the while block to toggle closed switches
-func execute (userdata):
+func execute ():
 
 	pass
 
@@ -40,12 +40,16 @@ func execute (userdata):
 
 
 func _ready():
-	$Luigi.face_east()
-	put_luigi_at_cell (6, 8)
-
 	var last = 4 + rng.randi() % 5
 	for i in range(0, last):
 		put_switch_at_cell(6 + i, 8)
 	
 	put_open_switch_at_cell(6 + last, 8)
-		
+
+	$Luigi.face_east()
+	put_luigi_at_cell (6, 8)
+	proceed.post()
+
+func main(userdata):
+	proceed.wait()
+	execute()
